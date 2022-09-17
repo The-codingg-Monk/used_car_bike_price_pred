@@ -1,7 +1,10 @@
 
 
+import sqlalchemy as sa
+import pandas as pd
+engine=sa.create_engine("mysql+pymysql://root:hindustaan@localhost:3306/bike_car_project")
 
-from flask import Flask,render_template,request,jsonify
+from flask import Flask,render_template,request,jsonify,json
 app=Flask(__name__)
 
 @app.route("/")
@@ -30,8 +33,17 @@ def faq():
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    data=request.form
-    print(data)
+    data=dict(request.form)
+    s1=pd.Series(data)
+    df1=pd.DataFrame([s1["Name"]])
+    df1.columns=[list(s1.index)[0]]
+    df2=pd.DataFrame([s1["Feedback"]])
+    df2.columns=[list(s1.index)[1]]
+    df=pd.concat([df1,df2],axis=1)
+
+    df.to_sql(name="feedback",con=engine,index=False,if_exists="append")
+    
+    
     return render_template("sub_feed.html")
 
 
@@ -40,4 +52,4 @@ def submit():
 
 
 if __name__=="__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0",port=8080,debug=False)
